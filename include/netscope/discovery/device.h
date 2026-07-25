@@ -16,8 +16,8 @@ namespace discovery {
 
 struct OSGuess {
     std::string name;
-    double confidence;
-    int ttl;
+    double confidence{0.0};
+    int ttl{0};
 };
 
 class Device {

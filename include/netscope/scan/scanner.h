@@ -14,10 +14,10 @@ namespace netscope {
 namespace scan {
 
 struct ScanProgress {
-    int total_hosts = 0;
-    int completed = 0;
-    int found = 0;
-    double elapsed_seconds = 0.0;
+    int total_hosts{0};
+    int completed{0};
+    int found{0};
+    double elapsed_seconds{0.0};
 };
 
 class Scanner {
@@ -34,7 +34,6 @@ public:
     std::vector<discovery::Device> ScanSubnet(const std::string& subnet);
     void ScanSubnetAsync(const std::string& subnet,
                          std::function<void(std::vector<discovery::Device>)> on_complete);
-
     void Cancel();
     bool IsRunning() const;
 
@@ -50,6 +49,7 @@ private:
     std::atomic<bool> cancelled_{false};
     std::atomic<bool> running_{false};
     int timeout_ms_{1000};
+    int max_threads_{64};
 };
 
 } // namespace scan

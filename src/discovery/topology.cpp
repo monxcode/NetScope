@@ -4,12 +4,21 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+#include <set>
 
 namespace netscope {
 namespace discovery {
 
 void Topology::AddDevice(const Device& device) {
-    auto node = BuildNode(device);
+    TopologyNode node;
+    node.id = device.IP();
+    node.label = device.Hostname().empty() ? device.IP() : device.Hostname();
+    node.type = DetermineDeviceType(device);
+
+    for (const auto& n : nodes_) {
+        if (n.id == node.id) return;
+    }
+
     nodes_.push_back(node);
 }
 
@@ -24,89 +33,145 @@ void Topology::SetInternet(bool connected) {
 std::string Topology::GenerateASCII() const {
     std::ostringstream oss;
 
-    oss << "Internet\n";
+    std::vector<TopologyNode> sorted = nodes_;
+    std::sort(sorted.begin(), sorted.end(), [](const TopologyNode& a, const TopologyNode& b) {
+        return a.id < b.id;
+    });
+
+    std::vector<TopologyNode> servers, desktops, devices, routers;
+    for (const auto& n : sorted) {
+        if (n.type == "router") routers.push_back(n);
+        else if (n.type == "server") servers.push_back(n);
+        else if (n.type == "desktop") desktops.push_back(n);
+        else devices.push_back(n);
+    }
+
     if (internet_connected_) {
+        oss << "  Internet\n";
         oss << "    |\n";
     }
 
-    auto gateway_it = std::find_if(nodes_.begin(), nodes_.end(),
-                                    [this](const TopologyNode& n) {
-                                        return n.id == gateway_ip_;
-                                    });
-
-    if (gateway_it != nodes_.end()) {
-        oss << " " << gateway_it->label << " (" << gateway_it->id << ")\n";
-    } else if (!gateway_ip_.empty()) {
-        oss << " Gateway (" << gateway_ip_ << ")\n";
-    } else if (!nodes_.empty()) {
-        oss << " Router\n";
-    }
-
-    int child_count = 0;
-    for (const auto& node : nodes_) {
-        if (node.id == gateway_ip_) continue;
-        child_count++;
-        if (child_count == 1) {
-            oss << "  ├── ";
-        } else if (child_count < static_cast<int>(nodes_.size())) {
-            oss << "  ├── ";
-        } else {
-            oss << "  └── ";
+    std::string gw_label = "Router";
+    if (!gateway_ip_.empty()) {
+        gw_label += " (" + gateway_ip_ + ")";
+        auto it = std::find_if(sorted.begin(), sorted.end(),
+                                [this](const TopologyNode& n) { return n.id == gateway_ip_; });
+        if (it != sorted.end()) {
+            gw_label = it->label + " [Router]";
         }
-        oss << node.label;
-        if (!node.id.empty()) {
-            oss << " (" << node.id << ")";
+    }
+    oss << "  " << gw_label << "\n";
+    oss << "    |\n";
+
+    auto print_group = [&oss](const std::vector<TopologyNode>& group,
+                               const std::string& prefix, bool is_last_group) {
+        for (size_t i = 0; i < group.size(); ++i) {
+            if (i == group.size() - 1) {
+                oss << "  " << prefix << "  +-- " << group[i].label
+                    << " (" << group[i].id << ")\n";
+            } else {
+                oss << "  " << prefix << "  +-- " << group[i].label
+                    << " (" << group[i].id << ")\n";
+            }
         }
-        oss << "\n";
+    };
+
+    bool has_servers = !servers.empty();
+    bool has_desktops = !desktops.empty();
+    bool has_devices = !devices.empty();
+    bool has_routers = !routers.empty();
+
+    auto print_with_branch = [&oss](const std::vector<TopologyNode>& group,
+                                     bool is_last) {
+        for (size_t i = 0; i < group.size(); ++i) {
+            std::string branch = (i == group.size() - 1 && is_last) ? "+--" : "+--";
+            oss << "  +--" << branch << " " << group[i].label
+                << " (" << group[i].id << ")\n";
+        }
+    };
+
+    oss << "  +--+--- " << (servers.size() + desktops.size() + devices.size() + routers.size())
+        << " devices\n";
+
+    for (size_t i = 0; i < servers.size(); ++i) {
+        std::string conn = (i == servers.size() - 1 && desktops.empty() && devices.empty() && routers.empty())
+                           ? "+--" : "+--";
+        oss << "  |   " << conn << " " << servers[i].label
+            << " (" << servers[i].id << ") [Server]\n";
     }
 
-    if (nodes_.empty()) {
-        oss << "  (no devices discovered)\n";
+    for (size_t i = 0; i < desktops.size(); ++i) {
+        bool last = (i == desktops.size() - 1 && devices.empty() && routers.empty());
+        oss << "  |   " << (last ? "+--" : "+--") << " " << desktops[i].label
+            << " (" << desktops[i].id << ")\n";
     }
+
+    for (size_t i = 0; i < devices.size(); ++i) {
+        bool last = (i == devices.size() - 1 && routers.empty());
+        oss << "  |   " << (last ? "+--" : "+--") << " " << devices[i].label
+            << " (" << devices[i].id << ")\n";
+    }
+
+    for (size_t i = 0; i < routers.size(); ++i) {
+        oss << "  |   +-- " << routers[i].label
+            << " (" << routers[i].id << ")\n";
+    }
+
+    if (sorted.empty()) oss << "  (no devices)\n";
 
     return oss.str();
 }
 
 std::string Topology::GenerateDOT() const {
     std::ostringstream oss;
+    oss << "// NetScope Network Topology\n";
+    oss << "// Generated by NetScope v1.0.0\n\n";
     oss << "digraph NetScopeTopology {\n";
     oss << "    rankdir=TB;\n";
-    oss << "    node [shape=box, style=rounded];\n\n";
+    oss << "    splines=ortho;\n";
+    oss << "    node [shape=box, style=filled, fillcolor=lightyellow];\n\n";
 
-    oss << "    internet [label=\"Internet\", shape=cloud];\n";
+    if (internet_connected_) {
+        oss << "    internet [label=Internet, shape=cloud, fillcolor=lightblue,"
+            << " fontcolor=darkblue];\n";
+    }
+
+    std::string gw_id = gateway_ip_.empty() ? "router" : gateway_ip_;
+    std::replace(gw_id.begin(), gw_id.end(), '.', '_');
+    oss << "    " << gw_id
+        << " [label=\"" << (gateway_ip_.empty() ? "Router" : "Router\\n" + gateway_ip_) << "\","
+        << " shape=box, fillcolor=lightcyan, fontcolor=darkblue];\n\n";
 
     for (const auto& node : nodes_) {
-        std::string safe_id = node.id;
-        std::replace(safe_id.begin(), safe_id.end(), '.', '_');
-        std::string escaped_label = node.label;
-        auto pos = escaped_label.find('"');
-        while (pos != std::string::npos) {
-            escaped_label.replace(pos, 1, "\\\"");
-            pos = escaped_label.find('"', pos + 2);
-        }
-        oss << "    " << safe_id << " [label=\"" << escaped_label << "\"";
-        if (node.type == "router") {
-            oss << ", color=blue, style=filled, fillcolor=lightblue";
-        } else if (node.type == "server") {
-            oss << ", color=green, style=filled, fillcolor=lightgreen";
-        } else if (node.type == "printer") {
-            oss << ", color=orange, style=filled, fillcolor=lightyellow";
-        }
-        oss << "];\n";
+        std::string sid = node.id;
+        std::replace(sid.begin(), sid.end(), '.', '_');
+
+        std::string color;
+        if (node.type == "server")      color = "lightgreen";
+        else if (node.type == "desktop") color = "lightyellow";
+        else if (node.type == "router")  color = "lightcyan";
+        else                            color = "lightgrey";
+
+        oss << "    " << sid << " [label=\"" << node.label << "\\n" << node.id << "\","
+            << " fillcolor=" << color << "];\n";
     }
 
     oss << "\n";
-    std::string gw_id = gateway_ip_.empty() ? "router" : gateway_ip_;
-    std::replace(gw_id.begin(), gw_id.end(), '.', '_');
-    oss << "    internet -> " << gw_id << ";\n";
-
-    for (const auto& node : nodes_) {
-        if (node.parent.empty()) {
-            std::string safe_id = node.id;
-            std::replace(safe_id.begin(), safe_id.end(), '.', '_');
-            oss << "    " << gw_id << " -> " << safe_id << ";\n";
-        }
+    if (internet_connected_) {
+        oss << "    internet -> " << gw_id << " [label=\"WAN\"];\n\n";
     }
+
+    oss << "    " << gw_id << " -> {";
+    bool first = true;
+    for (const auto& node : nodes_) {
+        std::string sid = node.id;
+        std::replace(sid.begin(), sid.end(), '.', '_');
+        if (sid == gw_id) continue;
+        if (!first) oss << "; ";
+        oss << sid;
+        first = false;
+    }
+    oss << "} [label=\"LAN\"];\n";
 
     oss << "}\n";
     return oss.str();
@@ -115,15 +180,12 @@ std::string Topology::GenerateDOT() const {
 bool Topology::ExportDOT(const std::string& path) const {
     try {
         std::ofstream file(path);
-        if (!file.is_open()) {
-            core::Logger::Instance().Error("Failed to write DOT file: " + path);
-            return false;
-        }
+        if (!file.is_open()) return false;
         file << GenerateDOT();
-        core::Logger::Instance().Info("Topology exported to DOT: " + path);
+        core::Logger::Instance().Info("Exported DOT topology to " + path);
         return true;
     } catch (const std::exception& e) {
-        core::Logger::Instance().Error("DOT export error: " + std::string(e.what()));
+        core::Logger::Instance().Error("DOT export failed: " + std::string(e.what()));
         return false;
     }
 }
@@ -134,41 +196,25 @@ void Topology::Clear() {
     internet_connected_ = false;
 }
 
-TopologyNode Topology::BuildNode(const Device& device) const {
-    TopologyNode node;
-    node.id = device.IP();
-    node.label = device.Hostname().empty() ? device.IP() : device.Hostname();
-    node.type = DetermineDeviceType(device);
-    return node;
-}
-
 std::string Topology::DetermineDeviceType(const Device& device) const {
     if (device.IP() == gateway_ip_) return "router";
-
     for (const auto& port : device.OpenPorts()) {
-        if (port.service == "HTTP" || port.service == "HTTPS") {
-            return "server";
-        }
-        if (port.service == "FTP" || port.service == "SSH") {
-            return "server";
-        }
+        if (port.service == "HTTP" || port.service == "HTTPS") return "server";
+        if (port.service == "SSH" || port.service == "FTP") return "server";
+        if (port.service == "MySQL" || port.service == "PostgreSQL") return "server";
+        if (port.service == "SMB" || port.service == "NetBIOS") return "desktop";
+        if (port.service == "RDP") return "desktop";
     }
-
-    if (device.Vendor() == "Apple" || device.Vendor() == "Samsung" ||
-        device.Vendor() == "Google") {
-        return "mobile";
-    }
-
-    for (const auto& p : device.OpenPorts()) {
-        if (p.service == "SMB" || p.service == "NetBIOS") {
-            return "desktop";
+    const auto& os = device.OS().name;
+    if (os.find("Windows") != std::string::npos) return "desktop";
+    if (os.find("Linux") != std::string::npos || os.find("Unix") != std::string::npos) {
+        for (const auto& port : device.OpenPorts()) {
+            if (port.service == "SSH") return "server";
         }
+        return "desktop";
     }
-
+    if (os.find("Printer") != std::string::npos) return "printer";
     return "device";
-}
-
-void Topology::BuildTree() {
 }
 
 } // namespace discovery

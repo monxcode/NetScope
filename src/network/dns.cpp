@@ -1,7 +1,7 @@
 #include "netscope/network/dns.h"
+#include "netscope/core/logger.h"
 
 #include <cstring>
-#include <algorithm>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -23,6 +23,7 @@ std::optional<std::string> DNSResolver::ResolveHostname(const std::string& ip) {
     struct in_addr addr;
     addr.s_addr = inet_addr(ip.c_str());
     if (addr.s_addr == INADDR_NONE) {
+        core::Logger::Instance().Debug("DNS: invalid IP " + ip);
         return std::nullopt;
     }
 
@@ -30,6 +31,7 @@ std::optional<std::string> DNSResolver::ResolveHostname(const std::string& ip) {
                                           sizeof(addr), AF_INET);
     if (host && host->h_name) {
         std::string hostname(host->h_name);
+        core::Logger::Instance().Debug("DNS: " + ip + " -> " + hostname);
         return hostname;
     }
 
@@ -46,23 +48,10 @@ std::optional<std::string> DNSResolver::ResolveIP(const std::string& hostname) {
     return std::nullopt;
 }
 
-std::vector<std::string> DNSResolver::GetDNSservers() {
+std::vector<std::string> DNSResolver::GetDNSServers() {
     std::vector<std::string> servers;
 
-#ifdef _WIN32
-    DNS_STATUS status = 0;
-    DNS_SERVER_NAMES* server_names = nullptr;
-
-    status = DnsQueryConfig(DnsConfigDnsServerList, 0, nullptr, nullptr,
-                            &server_names, nullptr);
-    if (status == ERROR_SUCCESS && server_names) {
-
-    }
-
-    if (server_names) {
-        HeapFree(GetProcessHeap(), 0, server_names);
-    }
-#else
+#ifndef _WIN32
     res_init();
     for (int i = 0; i < _res.nscount; ++i) {
         servers.push_back(inet_ntoa(_res.nsaddr_list[i].sin_addr));
@@ -70,10 +59,9 @@ std::vector<std::string> DNSResolver::GetDNSservers() {
 #endif
 
     if (servers.empty()) {
-        servers.push_back("8.8.8.8");
-        servers.push_back("1.1.1.1");
+        servers.emplace_back("8.8.8.8");
+        servers.emplace_back("1.1.1.1");
     }
-
     return servers;
 }
 

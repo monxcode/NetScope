@@ -3,10 +3,8 @@
 
 using namespace netscope::scan;
 
-TEST(ScannerTest, CreateScanner) {
-    EXPECT_NO_THROW({
-        Scanner scanner;
-    });
+TEST(ScannerTest, CreateAndDestroy) {
+    EXPECT_NO_THROW({ Scanner scanner; });
 }
 
 TEST(ScannerTest, InitialState) {
@@ -28,8 +26,12 @@ TEST(ScannerTest, CancelBeforeStart) {
 TEST(ScannerTest, ProgressCallback) {
     Scanner scanner;
     int calls = 0;
-    scanner.SetProgressCallback([&calls](const ScanProgress&) {
-        calls++;
-    });
+    scanner.SetProgressCallback([&calls](const ScanProgress&) { calls++; });
     EXPECT_NO_THROW(scanner.SetProgressCallback(nullptr));
+}
+
+TEST(ScannerTest, ScanEmptySubnet) {
+    Scanner scanner;
+    auto devices = scanner.ScanSubnet("");
+    EXPECT_TRUE(devices.empty());
 }

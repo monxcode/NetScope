@@ -31,13 +31,9 @@ public:
 
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
-    ThreadPool(ThreadPool&&) = delete;
-    ThreadPool& operator=(ThreadPool&&) = delete;
 
 private:
     void Worker();
-    void CreateWorkers(size_t count);
-    void DestroyWorkers();
 
     std::vector<std::thread> workers_;
     std::queue<std::function<void()>> tasks_;
@@ -61,9 +57,7 @@ auto ThreadPool::Enqueue(F&& f, Args&&... args)
 
     {
         std::lock_guard<std::mutex> lock(queue_mutex_);
-        if (stop_) {
-            throw std::runtime_error("enqueue on stopped thread pool");
-        }
+        if (stop_) throw std::runtime_error("enqueue on stopped thread pool");
         tasks_.emplace([task]() { (*task)(); });
         pending_.fetch_add(1, std::memory_order_release);
     }

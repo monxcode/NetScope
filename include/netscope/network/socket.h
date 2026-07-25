@@ -5,12 +5,12 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
-#include <iphlpapi.h>
 using socket_t = SOCKET;
 constexpr socket_t INVALID_SOCK = INVALID_SOCKET;
 #else
@@ -19,8 +19,7 @@ constexpr socket_t INVALID_SOCK = INVALID_SOCKET;
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
 using socket_t = int;
 constexpr socket_t INVALID_SOCK = -1;
 #endif
@@ -45,7 +44,7 @@ private:
 
 socket_t CreateSocket(int domain, int type, int protocol);
 void CloseSocket(socket_t fd);
-bool SetTimeout(socket_t fd, int timeout_ms);
+bool SetSocketTimeout(socket_t fd, int timeout_ms);
 bool ConnectWithTimeout(socket_t fd, const sockaddr_in& addr, int timeout_ms);
 std::string GetLastErrorString();
 int GetLastErrorCode();

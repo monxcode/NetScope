@@ -1,0 +1,87 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default (Debug)",
+            "description": "Default debug build",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "NETSCOPE_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "description": "Optimized release build",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "NETSCOPE_BUILD_TESTS": "OFF"
+            }
+        },
+        {
+            "name": "debug-windows",
+            "displayName": "Debug (MSVC)",
+            "description": "Debug build with MSVC",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build/msvc-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "NETSCOPE_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "release-windows",
+            "displayName": "Release (MSVC)",
+            "description": "Release build with MSVC",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build/msvc-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "NETSCOPE_BUILD_TESTS": "OFF"
+            }
+        },
+        {
+            "name": "debug-linux",
+            "displayName": "Debug (GCC/Clang)",
+            "description": "Debug build with GCC or Clang",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "NETSCOPE_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "release-linux",
+            "displayName": "Release (GCC/Clang)",
+            "description": "Optimized release build with GCC or Clang",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "NETSCOPE_BUILD_TESTS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        }
+    ]
+}

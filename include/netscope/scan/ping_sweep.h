@@ -14,9 +14,9 @@ namespace netscope {
 namespace scan {
 
 struct PingSweepProgress {
-    int total = 0;
-    int completed = 0;
-    int alive = 0;
+    int total{0};
+    int completed{0};
+    int alive{0};
 };
 
 class PingSweep {
@@ -41,6 +41,7 @@ private:
     ProgressCallback callback_;
     std::atomic<bool> cancelled_{false};
     int timeout_ms_{1000};
+    int max_threads_{64};
 };
 
 } // namespace scan

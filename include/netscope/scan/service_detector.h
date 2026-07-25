@@ -5,22 +5,29 @@
 #include <vector>
 #include <optional>
 #include <unordered_map>
+#include <memory>
+
+#include "netscope/core/thread_pool.h"
 
 namespace netscope {
 namespace scan {
 
 struct ServiceInfo {
-    int port;
+    int port{0};
     std::string protocol;
     std::string name;
     std::string banner;
     std::string version;
-    double confidence;
+    double confidence{0.0};
 };
 
 class ServiceDetector {
 public:
-    ServiceDetector() = default;
+    ServiceDetector();
+    ~ServiceDetector();
+
+    void SetMaxThreads(int threads);
+    void SetTimeout(int timeout_ms);
 
     std::vector<ServiceInfo> DetectServices(const std::string& ip,
                                              const std::vector<int>& ports);
@@ -32,8 +39,11 @@ public:
 
 private:
     std::string IdentifyService(int port);
-    std::string ParseBanner(const std::string& banner);
-    std::string DetectVersion(const std::string& banner, const std::string& service);
+    std::string ParseVersion(const std::string& banner);
+
+    int timeout_ms_{3000};
+    int max_threads_{16};
+    std::unique_ptr<core::ThreadPool> pool_;
 
     static const std::unordered_map<int, std::string> kKnownServices;
 };

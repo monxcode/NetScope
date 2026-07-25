@@ -1,0 +1,58 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        config: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }}
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+        config: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+          if [ "${{ matrix.compiler }}" = "clang++" ]; then
+            sudo apt-get install -y clang
+          fi
+      - name: Configure CMake
+        run: |
+          export CXX=${{ matrix.compiler }}
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }} -GNinja
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        uses: jidicula/clang-format-action@v4.11.0
+        with:
+          clang-format-version: '17'

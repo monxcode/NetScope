@@ -38,9 +38,7 @@ public:
     Topology& operator=(const Topology&) = delete;
 
 private:
-    TopologyNode BuildNode(const Device& device) const;
     std::string DetermineDeviceType(const Device& device) const;
-    void BuildTree();
 
     std::vector<TopologyNode> nodes_;
     std::string gateway_ip_;

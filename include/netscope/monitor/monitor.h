@@ -9,7 +9,6 @@
 #include <thread>
 
 #include "netscope/discovery/device.h"
-#include "netscope/scan/scanner.h"
 
 namespace netscope {
 namespace monitor {
@@ -50,11 +49,9 @@ public:
 
 private:
     void MonitorLoop();
-    void CompareDevices(const std::vector<discovery::Device>& current);
-    void Notify(MonitorEvent event, const discovery::Device& device,
-                const std::string& message);
+    void DetectChanges(const std::vector<discovery::Device>& previous,
+                        const std::vector<discovery::Device>& current);
 
-    std::unique_ptr<scan::Scanner> scanner_;
     NotificationCallback callback_;
     std::string subnet_;
     std::vector<discovery::Device> previous_devices_;

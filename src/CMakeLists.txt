@@ -15,20 +15,21 @@ set(NETSCOPE_SOURCES
     scan/service_detector.cpp
     discovery/device.cpp
     discovery/topology.cpp
-    ui/terminal.cpp
-    ui/menu.cpp
     export/exporter.cpp
-    export/formatter.cpp
     monitor/monitor.cpp
+    utils/network_utils.cpp
+    utils/statistics.cpp
+    fingerprint/os_detector.cpp
 )
 
 set(NETSCOPE_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/netscope/core/application.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/core/config.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/core/logger.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/core/platform.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/core/thread_pool.h
     ${CMAKE_SOURCE_DIR}/include/netscope/core/version.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/platform.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/filesystem.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/logger.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/config.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/thread_pool.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/core/application.h
     ${CMAKE_SOURCE_DIR}/include/netscope/network/socket.h
     ${CMAKE_SOURCE_DIR}/include/netscope/network/icmp.h
     ${CMAKE_SOURCE_DIR}/include/netscope/network/arp.h
@@ -39,11 +40,11 @@ set(NETSCOPE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/netscope/scan/service_detector.h
     ${CMAKE_SOURCE_DIR}/include/netscope/discovery/device.h
     ${CMAKE_SOURCE_DIR}/include/netscope/discovery/topology.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/ui/terminal.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/ui/menu.h
     ${CMAKE_SOURCE_DIR}/include/netscope/export/exporter.h
-    ${CMAKE_SOURCE_DIR}/include/netscope/export/formatter.h
     ${CMAKE_SOURCE_DIR}/include/netscope/monitor/monitor.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/utils/network_utils.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/utils/statistics.h
+    ${CMAKE_SOURCE_DIR}/include/netscope/fingerprint/os_detector.h
 )
 
 add_executable(netscope ${NETSCOPE_SOURCES} ${NETSCOPE_HEADERS})

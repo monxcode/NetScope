@@ -6,7 +6,7 @@
 #include <mutex>
 #include <memory>
 #include <chrono>
-#include <filesystem>
+#include "netscope/core/filesystem.h"
 #include <unordered_map>
 
 namespace netscope {
@@ -26,9 +26,8 @@ public:
 
     void SetLevel(LogLevel level);
     LogLevel GetLevel() const;
-
     void SetFileEnabled(bool enabled);
-    void SetLogPath(const std::filesystem::path& path);
+    void SetLogPath(const fs::path& path);
     void SetMaxSizeMB(size_t mb);
 
     void Debug(const std::string& message);
@@ -36,7 +35,6 @@ public:
     void Warn(const std::string& message);
     void Error(const std::string& message);
     void Fatal(const std::string& message);
-
     void Log(LogLevel level, const std::string& message);
 
     Logger(const Logger&) = delete;
@@ -48,14 +46,12 @@ private:
     Logger();
     ~Logger();
 
-    void WriteFile(const std::string& formatted);
     std::string FormatMessage(LogLevel level, const std::string& message);
     std::string LevelToString(LogLevel level);
-    void RotateIfNeeded();
 
     LogLevel level_{LogLevel::INFO};
     bool file_enabled_{true};
-    std::filesystem::path log_path_;
+    fs::path log_path_;
     size_t max_size_mb_{10};
     std::ofstream file_stream_;
     mutable std::mutex mutex_;

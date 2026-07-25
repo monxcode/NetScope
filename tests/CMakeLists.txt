@@ -9,11 +9,18 @@ FetchContent_MakeAvailable(googletest)
 set(TEST_SOURCES
     test_main.cpp
     test_config.cpp
-    test_device.cpp
     test_logger.cpp
     test_thread_pool.cpp
+    test_device.cpp
     test_scanner.cpp
     test_ping_sweep.cpp
+    test_port_scanner.cpp
+    test_service_detector.cpp
+    test_network_utils.cpp
+    test_statistics.cpp
+    test_os_detector.cpp
+    test_exporter.cpp
+    test_topology.cpp
 )
 
 add_executable(netscope_tests ${TEST_SOURCES})
@@ -29,5 +36,7 @@ target_link_libraries(netscope_tests PRIVATE
     nlohmann_json::nlohmann_json
     ${PLATFORM_LIBS}
 )
+
+include_directories(SYSTEM ${nlohmann_json_SOURCE_DIR}/include)
 
 gtest_discover_tests(netscope_tests)

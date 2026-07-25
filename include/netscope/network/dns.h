@@ -14,7 +14,7 @@ public:
 
     static std::optional<std::string> ResolveHostname(const std::string& ip);
     static std::optional<std::string> ResolveIP(const std::string& hostname);
-    static std::vector<std::string> GetDNSservers();
+    static std::vector<std::string> GetDNSServers();
 
     DNSResolver(const DNSResolver&) = delete;
     DNSResolver& operator=(const DNSResolver&) = delete;

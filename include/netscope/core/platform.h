@@ -23,8 +23,8 @@ struct NetworkInterface {
     std::string netmask;
     std::string broadcast;
     std::string mac_address;
-    bool is_loopback;
-    bool is_up;
+    bool is_loopback{false};
+    bool is_up{false};
 };
 
 class Platform {

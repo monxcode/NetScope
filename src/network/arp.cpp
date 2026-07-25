@@ -26,7 +26,7 @@ namespace netscope {
 namespace network {
 
 ARPScanner::ARPScanner() {
-    core::Logger::Instance().Debug("ARPScanner initialized");
+    core::Logger::Instance().Debug("ARPScanner created");
 }
 
 ARPScanner::~ARPScanner() = default;
@@ -37,12 +37,11 @@ std::vector<ARPEntry> ARPScanner::ScanLocalNetwork() {
 #ifdef _WIN32
     ULONG size = 0;
     GetIpNetTable(nullptr, &size, FALSE);
-
     auto buffer = std::make_unique<char[]>(size);
     auto table = reinterpret_cast<PMIB_IPNETTABLE>(buffer.get());
 
     if (GetIpNetTable(table, &size, FALSE) != NO_ERROR) {
-        core::Logger::Instance().Error("Failed to get ARP table");
+        core::Logger::Instance().Warn("ARP: GetIpNetTable failed");
         return entries;
     }
 
@@ -55,22 +54,22 @@ std::vector<ARPEntry> ARPScanner::ScanLocalNetwork() {
         addr.S_un.S_addr = row.dwAddr;
         entry.ip_address = inet_ntoa(addr);
         entry.mac_address = MacToString(row.bPhysAddr, row.dwPhysAddrLen);
-
         entry.vendor = LookupVendor(entry.mac_address);
         entries.push_back(entry);
     }
 #else
     FILE* fp = fopen("/proc/net/arp", "r");
     if (!fp) {
-        core::Logger::Instance().Error("Failed to open /proc/net/arp");
+        core::Logger::Instance().Warn("ARP: cannot open /proc/net/arp");
         return entries;
     }
 
     char line[256];
-    fgets(line, sizeof(line), fp);
+    fgets(line, sizeof(line), fp); // skip header
 
     while (fgets(line, sizeof(line), fp)) {
-        char ip[64], hw_type[16], flags[16], mac[64], mask[16], device[64];
+        char ip[64] = {0}, hw_type[16] = {0}, flags[16] = {0};
+        char mac[64] = {0}, mask[16] = {0}, device[64] = {0};
         if (sscanf(line, "%63s %15s %15s %63s %15s %63s",
                    ip, hw_type, flags, mac, mask, device) < 6) {
             continue;
@@ -83,21 +82,17 @@ std::vector<ARPEntry> ARPScanner::ScanLocalNetwork() {
         entry.vendor = LookupVendor(mac);
         entries.push_back(entry);
     }
-
     fclose(fp);
 #endif
 
-    core::Logger::Instance().Info("ARP scan found " +
-                                  std::to_string(entries.size()) + " entries");
+    core::Logger::Instance().Info("ARP table: " + std::to_string(entries.size()) + " entries");
     return entries;
 }
 
 std::optional<ARPEntry> ARPScanner::Resolve(const std::string& ip) {
     auto entries = ScanLocalNetwork();
     for (const auto& entry : entries) {
-        if (entry.ip_address == ip) {
-            return entry;
-        }
+        if (entry.ip_address == ip) return entry;
     }
     return std::nullopt;
 }
@@ -119,23 +114,16 @@ std::string ARPScanner::LookupVendor(const std::string& mac) {
     std::string oui = mac.substr(0, 8);
     std::transform(oui.begin(), oui.end(), oui.begin(), ::toupper);
 
-    auto it = oui_database_.find(oui);
-    if (it != oui_database_.end()) {
-        return it->second;
-    }
-
-    static const std::unordered_map<std::string, std::string> kCommonOUI = {
+    static const std::unordered_map<std::string, std::string> kOUI = {
         {"00:00:0C", "Cisco"},
         {"00:01:5C", "Xerox"},
         {"00:03:93", "Apple"},
-        {"00:05:69", "Hewlett-Packard"},
+        {"00:05:69", "HP"},
         {"00:0C:29", "VMware"},
         {"00:14:22", "Dell"},
         {"00:16:3E", "Xen"},
         {"00:1A:11", "Google"},
-        {"00:1B:21", "Broadcom"},
         {"00:1E:68", "Netgear"},
-        {"00:1F:90", "Nokia"},
         {"00:21:5A", "Intel"},
         {"00:23:AE", "Amazon"},
         {"00:24:18", "Intel"},
@@ -147,7 +135,6 @@ std::string ARPScanner::LookupVendor(const std::string& mac) {
         {"00:90:27", "Huawei"},
         {"00:E0:4C", "Realtek"},
         {"08:00:27", "Oracle"},
-        {"08:00:46", "Intel"},
         {"08:74:02", "Cisco"},
         {"0C:9D:92", "Microsoft"},
         {"10:60:4B", "Apple"},
@@ -170,7 +157,6 @@ std::string ARPScanner::LookupVendor(const std::string& mac) {
         {"48:45:20", "Google"},
         {"50:3A:7F", "Amazon"},
         {"54:04:A6", "Cisco"},
-        {"54:60:09", "Intel"},
         {"58:55:CA", "Apple"},
         {"5C:95:AE", "Intel"},
         {"60:30:D4", "Intel"},
@@ -223,12 +209,8 @@ std::string ARPScanner::LookupVendor(const std::string& mac) {
         {"FC:F8:AE", "Intel"},
     };
 
-    auto iter = kCommonOUI.find(oui);
-    if (iter != kCommonOUI.end()) {
-        return iter->second;
-    }
-
-    return "Unknown";
+    auto it = kOUI.find(oui);
+    return (it != kOUI.end()) ? it->second : "";
 }
 
 } // namespace network

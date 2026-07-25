@@ -4,9 +4,7 @@
 using namespace netscope::scan;
 
 TEST(PingSweepTest, Create) {
-    EXPECT_NO_THROW({
-        PingSweep sweep;
-    });
+    EXPECT_NO_THROW({ PingSweep sweep; });
 }
 
 TEST(PingSweepTest, SetProperties) {
@@ -23,8 +21,6 @@ TEST(PingSweepTest, Cancel) {
 TEST(PingSweepTest, ProgressCallback) {
     PingSweep sweep;
     int calls = 0;
-    sweep.SetProgressCallback([&calls](const PingSweepProgress&) {
-        calls++;
-    });
+    sweep.SetProgressCallback([&calls](const PingSweepProgress&) { calls++; });
     EXPECT_NO_THROW(sweep.SetProgressCallback(nullptr));
 }

@@ -13,17 +13,17 @@ namespace netscope {
 namespace scan {
 
 struct PortResult {
-    int port = 0;
+    int port{0};
     std::string protocol;
-    bool open = false;
+    bool open{false};
     std::string service;
     std::string banner;
 };
 
 struct PortScanProgress {
-    int total = 0;
-    int completed = 0;
-    int open = 0;
+    int total{0};
+    int completed{0};
+    int open{0};
 };
 
 class PortScanner {
@@ -44,7 +44,6 @@ public:
     void ScanAsync(const std::string& ip,
                    const std::vector<int>& ports,
                    std::function<void(std::vector<PortResult>)> on_complete);
-
     void Cancel();
     bool IsRunning() const;
 
@@ -59,6 +58,7 @@ private:
     std::atomic<bool> cancelled_{false};
     std::atomic<bool> running_{false};
     int timeout_ms_{1000};
+    int max_threads_{64};
 };
 
 } // namespace scan

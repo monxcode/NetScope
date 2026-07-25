@@ -5,15 +5,20 @@
 #include <chrono>
 #include <optional>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 namespace netscope {
 namespace network {
 
 struct ICMPReply {
     std::string ip;
-    int ttl;
-    std::chrono::milliseconds rtt;
-    bool success;
-    int bytes_received;
+    int ttl{0};
+    std::chrono::milliseconds rtt{0};
+    bool success{false};
+    int bytes_received{0};
 };
 
 class ICMPScanner {
@@ -33,6 +38,7 @@ private:
 
     int timeout_ms_;
     int retries_;
+    bool initialized_{false};
 #ifdef _WIN32
     HANDLE icmp_handle_{nullptr};
 #else

@@ -5,9 +5,11 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 #include "netscope/core/config.h"
 #include "netscope/core/logger.h"
+#include "netscope/discovery/device.h"
 
 namespace netscope {
 namespace core {
@@ -56,17 +58,25 @@ private:
     int ScanMode(const CommandLineArgs& args);
     int MonitorMode(const CommandLineArgs& args);
     int DeviceListMode();
-    int DeviceInfoMode(const CommandLineArgs& args);
-    int PortScanMode(const CommandLineArgs& args);
-    int ExportMode(const CommandLineArgs& args);
+    int DeviceInfoMode(const std::string& ip);
+    int PortScanMode(const std::string& ip, const CommandLineArgs& args);
+    int ExportMode(const std::string& format);
+    int ExportMode(const std::string& format,
+                   const std::vector<discovery::Device>* devices);
     int TopologyMode();
-    int ConfigMode(const CommandLineArgs& args);
+    int ConfigMode();
+
+    std::vector<discovery::Device> DoScan();
+    std::vector<discovery::Device> DoScan(const std::string& subnet);
+    void PrintDevices(const std::vector<discovery::Device>& devices);
+    void PrintTopology(const std::vector<discovery::Device>& devices);
+    void PrintInterfaces();
+    static std::string Truncate(const std::string& s, size_t max_len);
 
     void PrintBanner();
     void PrintHelp();
     void PrintVersion();
 
-    std::unique_ptr<Logger> logger_;
     AppConfig config_;
     bool initialized_{false};
 };

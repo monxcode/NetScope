@@ -5,6 +5,7 @@
 #include <vector>
 #include <optional>
 #include <unordered_map>
+#include <cstdint>
 
 namespace netscope {
 namespace network {
@@ -28,10 +29,8 @@ public:
     ARPScanner& operator=(const ARPScanner&) = delete;
 
 private:
-    std::string MacToString(const uint8_t* mac, size_t len);
-    std::string LookupVendor(const std::string& mac);
-
-    std::unordered_map<std::string, std::string> oui_database_;
+    static std::string MacToString(const uint8_t* mac, size_t len);
+    static std::string LookupVendor(const std::string& mac);
 };
 
 } // namespace network

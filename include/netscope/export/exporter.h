@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <filesystem>
+#include "netscope/core/filesystem.h"
 
 #include "netscope/discovery/device.h"
 #include "netscope/discovery/topology.h"
@@ -23,18 +23,18 @@ public:
     Exporter() = default;
 
     bool Export(const std::vector<discovery::Device>& devices,
-                const std::filesystem::path& path,
+                const fs::path& path,
                 ExportFormat format);
 
     bool ExportJSON(const std::vector<discovery::Device>& devices,
-                    const std::filesystem::path& path);
+                    const fs::path& path);
     bool ExportCSV(const std::vector<discovery::Device>& devices,
-                   const std::filesystem::path& path);
+                   const fs::path& path);
     bool ExportTXT(const std::vector<discovery::Device>& devices,
-                   const std::filesystem::path& path);
+                   const fs::path& path);
 
     bool ExportTopology(const discovery::Topology& topology,
-                        const std::filesystem::path& path,
+                        const fs::path& path,
                         ExportFormat format);
 
     static std::string FormatToString(ExportFormat format);

@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
-#include <filesystem>
+#include "netscope/core/filesystem.h"
 #include <optional>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
@@ -63,8 +63,8 @@ class Config {
 public:
     static Config& Instance();
 
-    bool Load(const std::filesystem::path& path = "");
-    bool Save(const std::filesystem::path& path = "");
+    bool Load(const fs::path& path = "");
+    bool Save(const fs::path& path = "");
 
     AppConfig Get() const;
     void Set(const AppConfig& config);
@@ -76,8 +76,8 @@ public:
     LoggingConfig& Logging();
     UIConfig& UI();
 
-    std::filesystem::path GetConfigPath() const;
-    void SetConfigPath(const std::filesystem::path& path);
+    fs::path GetConfigPath() const;
+    void SetConfigPath(const fs::path& path);
 
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
@@ -93,7 +93,7 @@ private:
     nlohmann::json ToJson() const;
 
     AppConfig config_;
-    std::filesystem::path config_path_;
+    fs::path config_path_;
     mutable std::mutex mutex_;
 };
 

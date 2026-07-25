@@ -28,7 +28,6 @@ else()
     endif()
 endif()
 
-# --- Dependencies ---
 include(FetchContent)
 
 FetchContent_Declare(
@@ -38,7 +37,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-# --- Platform specific ---
 if(WIN32)
     set(PLATFORM_LIBS ws2_32 iphlpapi)
     add_compile_definitions(NETSCOPE_WINDOWS)
@@ -49,7 +47,6 @@ elseif(UNIX)
     add_compile_definitions(NETSCOPE_LINUX)
 endif()
 
-# --- Subdirectories ---
 add_subdirectory(src)
 
 option(NETSCOPE_BUILD_TESTS "Build unit tests" ON)
