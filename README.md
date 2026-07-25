@@ -61,39 +61,78 @@ NetScope/
 
 ### Windows
 
-1. Install [Visual Studio 2022](https://visualstudio.microsoft.com/) with "Desktop development with C++"
-2. Install [CMake](https://cmake.org/download/) (3.20+) and ensure it is in your PATH
-3. *(Optional)* Install [Npcap](https://npcap.com/) for raw packet capture
+###### 1. Install Visual Studio 2022
+
+Download and install [Visual Studio 2022](https://visualstudio.microsoft.com/). During setup select the **Desktop development with C++** workload.
+
+###### 2. Install CMake
+
+Download and install [CMake](https://cmake.org/download/) 3.20 or later. Ensure CMake is added to your system PATH during installation.
+
+###### 3. Clone the Repository
 
 ```powershell
-# Clone the repository
 git clone https://github.com/yourusername/netscope.git
-cd netscope
+cd NetScope
+```
 
-# Configure and build
+###### 4. Configure the Project
+
+```powershell
 cmake --preset debug-windows
-cmake --build build/msvc-debug --config Debug
+```
 
-# Run
+###### 5. Build the Project
+
+```powershell
+cmake --build build/msvc-debug --config Debug
+```
+
+###### 6. Run NetScope
+
+```powershell
 build\msvc-debug\bin\netscope.exe
 ```
 
+###### 7. (Optional) Install Npcap
+
+Download and install [Npcap](https://npcap.com/) if you need raw packet capture functionality. This is not required for standard ARP table scanning.
+
 ### Linux
 
+###### 1. Install Build Dependencies
+
 ```bash
-# Install dependencies (Debian/Ubuntu)
 sudo apt update
 sudo apt install build-essential cmake libpcap-dev
+```
 
-# Clone and build
+###### 2. Clone the Repository
+
+```bash
 git clone https://github.com/yourusername/netscope.git
-cd netscope
-cmake --preset debug-linux
-cmake --build build/debug
+cd NetScope
+```
 
-# Run (may need root for ICMP/ARP)
+###### 3. Configure the Project
+
+```bash
+cmake --preset debug-linux
+```
+
+###### 4. Build the Project
+
+```bash
+cmake --build build/debug
+```
+
+###### 5. Run NetScope
+
+```bash
 sudo ./build/debug/bin/netscope
 ```
+
+Root privileges are required for ICMP and ARP operations on Linux.
 
 ## Usage
 
