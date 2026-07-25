@@ -1,0 +1,32 @@
+{
+    "network": {
+        "subnet": "192.168.1.0/24",
+        "timeout_ms": 1000,
+        "retries": 2,
+        "max_threads": 64,
+        "ping_count": 2
+    },
+    "ports": {
+        "default": [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 3306, 3389, 8080],
+        "custom": [],
+        "range_start": null,
+        "range_end": null
+    },
+    "monitor": {
+        "interval_seconds": 30,
+        "enabled": false
+    },
+    "export": {
+        "default_format": "json",
+        "auto_export": false
+    },
+    "logging": {
+        "level": "info",
+        "file_enabled": true,
+        "max_size_mb": 10
+    },
+    "ui": {
+        "theme": "dark",
+        "refresh_rate_ms": 500
+    }
+}

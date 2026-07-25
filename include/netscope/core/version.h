@@ -1,0 +1,12 @@
+#ifndef NETSCOPE_CORE_VERSION_H
+#define NETSCOPE_CORE_VERSION_H
+
+#define NETSCOPE_VERSION_MAJOR 1
+#define NETSCOPE_VERSION_MINOR 0
+#define NETSCOPE_VERSION_PATCH 0
+
+#define NETSCOPE_VERSION "1.0.0"
+#define NETSCOPE_NAME "NetScope"
+#define NETSCOPE_DESCRIPTION "Network Topology Discovery Tool"
+
+#endif
